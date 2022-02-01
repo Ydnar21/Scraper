@@ -19,7 +19,7 @@ jsonList = []
     
 
     
-URL = "https://behindthename.com/names/letter/a/" 
+URL = "https://behindthename.com/names/letter/"+letter+"/" + str(pagenum) +"/"
 try:
     page = requests.get(URL)
 except print("End of "):
