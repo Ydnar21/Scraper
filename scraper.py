@@ -1,133 +1,174 @@
 
+#Scraper
+
+from ast import dump
 from statistics import mean
 from turtle import title
 import requests
 from bs4 import BeautifulSoup
 import csv
 import json
-pagenum=2
-
+#This was before I was going to parse through the nav href it is not needed right now 
+pagenum=1
 letter_counter=1
 letter="a"
 firstname = []
 usage = []
 means = []
-jsonList = []
-#for num in pagenum:
-        #pages=10
-    #for i in pages
-    
-
-    
-URL = "https://behindthename.com/names/letter/"+letter+"/" + str(pagenum) +"/"
-try:
-    page = requests.get(URL)
-except print("End of "):
-    pass
-
-
-
-soup = BeautifulSoup(page.content, "html.parser")
-#print(soup)
-
-
-mean = soup.find_all(class_="mng")
-#print(mean)
-results = soup.find_all( class_="nll",href =True, text=True)
-
-for m in mean:
-    
-    for u in m:
-        
-        means.append(u)
-#print(means)
-
-
-full_related = []
-#The name itself
-for name in results:
-    for realname in name:
-        firstname.append(realname)
-    
-
-
-#must get the genders 
 gender = []
-fem = "F"
-masc = "M"
-genders= soup.find_all(class_="listgender")
-for i in genders:
-    for g in i:
-        for t in g:
-            if t == "f":
-                gender.append(fem)
-            if t == "m":
-                gender.append(masc)
-        
-        
+jsonList = []
+full_related = []
+endnum = -2
     
-    
-"""
-#gender.append(fem)
-#print(gender)
-#else:
-#gender.append(Male)
-"""
-
-#The usage of where the name comes from
-meaning = soup.find_all(class_="listusage")
-for t in meaning:
-    for u in t:
-        for i in u:
-            if i == "," or i == " ":
-                pass
-            else:
-                usage.append(i)   
-
-
-
-
-
-"""
-#to find related names
-
-for i in firstname:
-    
-    URL = "https://www.behindthename.com/name/" +i +"/related"
+while pagenum != endnum +1:
+    print("This is the page number: ", pagenum)
+    #gets the URL needed to gather the information
+    URL = "https://behindthename.com/names/letter/" + letter +"/"+ str(pagenum)
     page = requests.get(URL)
-
-    rel = []
-    related = BeautifulSoup(page.content, "html.parser")
-    relate = related.find_all(class_= "nlc")
-    for m in relate:
-        for w in m:
-            if w == " ":
-                pass
-            else:
-
-                #print(w)
-                rel.append(w)
-                #print(related)
-
-
-    #full_related.append(rel)   
-    #print(full_related) 
-        """
-        
+    soup = BeautifulSoup(page.content, "html.parser")
+    nav = soup.find_all(class_="pgblurb")
+    for line in nav:
+        for let in line:
+            for f in let:
+                if f == "f":
+                    endnum= int(let[30])
+    results = soup.find_all( class_="nll")
+    #print(results)
 
 
 
 
-with open('tester.json', "w") as f:
-    #dumping to a json file
+
+
+
+
+    #This gathers the list of related names for a single name and stores the (rel) list of related names into the full_related list
     
-    for i in range(0,len(firstname)):
-        jsonList.append({ "Usage" : usage[i] , "FirstName": firstname[i],"Gender": gender[i]})
+    #The name itself
+    numb = 0
+    for name in results:  
+        #print(name)
+        
+        for i in name:
+            if str(i) != '<span class="nn">1</span>' and str(i) != '<span class="nn">2</span>' and str(i) != '<span class="nn">3</span>' and str(i) != '<span class="nn">4</span>' and str(i) != '<span class="nn">5</span>':
+                firstname.append(i)
+                #print(i)
+                numb= numb+1
+                
+            #print('<span class="nn">1</span>')
+            
+           
+                #numb= numb+1
+        #if len(results[numb]) == 1:
+            
+            #NAMES IS AT 308 needs to be at 300 why is there 8 more SPANS???
+                    
+            
+    print("Firstname Count importing from Website... " ,numb)
+
+
+
+    #This gets the gender of each of the names 
+    
+    fem = "F"
+    masc = "M"
+    genders= soup.find_all(class_="listgender")
+    count =0
+    for i in genders:
+        
+        #FIX THIS A GENDER CAN BE BOTH 
+        if len(genders[count]) > 1:
+            gender.append("M & F")
+        else:
+            for l in i:
+                for t in l:
+                    if t =="f":
+                        gender.append(fem)
+                    else:
+                        gender.append(masc)
+        #print(genders)
+        count =count+1
+    print("Gender Count importing from website... " ,count)
+    #print(gender)
+       
+                
+            
+            
         
 
+    #This section gets the usage of the name
+    #The usage of where the name comes from
+    meaning = soup.find_all(class_="listusage")
+    legit= 2
+    now=0
+    
+    check = 0
+    for t in meaning:
+        check = check +1
+        if len(t) == 1:
+            
+            for i in t:
+                for g in i:
+                    usage.append(g)
+        elif len(t) > 1:
+            multi=[]
+            for m in t:
+                for u in m:
+                    if u == "," or u == " ":
+                        now = now+1
+                    elif now ==2:
+                        usage.append(multi)
+                        
+                    
+                    elif now !=2:
+                        if m != ",":
+                            now = now+1 
+                            multi.append(u)
+                    elif now ==2:
+                        
+                        multi.append(u)
+                        now = 0
+            usage.append(multi)
+    print("Final check boiii", len(usage))
+                    
+        
+    print("This is the meanings check", check)           
+        
+          
 
-    json.dump(jsonList, f)
+    """
+    full_related =[]
+    rel = []
+    #n is each name from the firstname list already gathered
+    #Then adds the name to find the URL 
+    #That could be the issue of slowing down because I am requesting this page over and over 
+    for n in firstname:
+
+        name_URL = "https://www.behindthename.com/name/" +n+"/related"
+        page = requests.get(name_URL)
+        
+        related = BeautifulSoup(page.content, "html.parser")
+        relate = related.find_all(class_= "nlc", text =True)
+        for i in relate:
+            for l in i:
+                rel.append(l)
+    print(rel)
+
+    full_related.append(rel)   
+        #print(full_related) 
+
+    """
+    
+   
+    with open("tester.json", "w") as f:
+        
+        
+        for i in range(0,len(firstname)):
+            jsonList.append({ "Usage" : usage[i] , "FirstName": firstname[i],"Gender": gender[i]})
+            #jsonList.append({"Full_Names": rel})
 
 
-
-    #print(job_elements)
+        json.dump(jsonList, f)
+        
+    
+    pagenum = pagenum+1
